@@ -103,9 +103,9 @@ fn play_solitaire(deck: &mut Vec<(String, usize, usize, bool)>,
 fn draw_three_from_stock(deck: &mut Vec<(String, usize, usize, bool)>, 
                         waste: &mut Vec<(String, usize, usize, bool)>) {
     'triple_draw: for _ in 0..3 {
-        if deck.len() > 0 {
+        if !deck.is_empty() {
             waste.push(draw_card_from_pile(deck));
-        } else if waste.len() > 0 {
+        } else if !waste.is_empty() {
             deck.append(waste);
             waste.push(draw_card_from_pile(deck));
         } else {
@@ -175,18 +175,18 @@ fn on_tableau_selection(tableau: &mut Vec<Vec<(String, usize, usize, bool)>>,
                 source_pile.push(get_top_of_pile_card(waste.to_vec()));
                 if pile_can_be_placed(source_pile.to_vec(), target_pile_copy.to_vec()) {
                     draw_card_from_pile(waste);
-                    let mut target_pile = tableau.get_mut(pile_index).expect("ERROR: Pile index breach");
-                    place_pile_on_pile(source_pile, &mut target_pile);
+                    let target_pile = tableau.get_mut(pile_index).expect("ERROR: Pile index breach");
+                    place_pile_on_pile(source_pile, target_pile);
                     *tableau_selection = NULL_USIZE;
                     flip_top_card_in_pile(target_pile);
                 }
             } else {
                 let source_pile_copy = tableau.get(*tableau_selection).expect("ERROR: Pile index breach");
                 if pile_can_be_placed(get_flipped_pile(source_pile_copy.to_vec()), target_pile_copy.to_vec()) {
-                    let mut source_pile = tableau.get_mut(*tableau_selection).expect("ERROR: Pile index breach");
-                    let pile = draw_flipped_pile(&mut source_pile);
-                    let mut target_pile = tableau.get_mut(pile_index).expect("ERROR: Pile index breach");
-                    place_pile_on_pile(pile, &mut target_pile);
+                    let source_pile = tableau.get_mut(*tableau_selection).expect("ERROR: Pile index breach");
+                    let pile = draw_flipped_pile(source_pile);
+                    let target_pile = tableau.get_mut(pile_index).expect("ERROR: Pile index breach");
+                    place_pile_on_pile(pile, target_pile);
                 }
     
                 let source_pile = tableau.get_mut(*tableau_selection).expect("ERROR: Pile index breach");
@@ -198,10 +198,10 @@ fn on_tableau_selection(tableau: &mut Vec<Vec<(String, usize, usize, bool)>>,
 }
 
 fn flip_top_card_in_pile(pile: &mut Vec<(String, usize, usize, bool)>) {
-    if pile.len() > 0 {
+    if !pile.is_empty() {
         match pile.last_mut() {
             Some(card) => card.3 = true,
-            None => return,
+            None => (),
         }
     }
 }
@@ -218,15 +218,11 @@ fn pile_can_be_placed(source_pile: Vec<(String, usize, usize, bool)>, target_pil
         None => { return false },
     };
 
-    if first_card.2 == 13 && target_pile.len() == 0 {
+    if first_card.2 == 13 && target_pile.is_empty() {
         true
-    } else if target_pile.len() > 0 {
+    } else if !target_pile.is_empty() {
         let target_pile_card = get_top_of_pile_card(target_pile);
-        if is_different_color_suit(first_card.1, target_pile_card.1) && target_pile_card.2 > first_card.2 && target_pile_card.2 - first_card.2 == 1 {
-            true
-        } else {
-            false
-        }
+        is_different_color_suit(first_card.1, target_pile_card.1) && target_pile_card.2 > first_card.2 && target_pile_card.2 - first_card.2 == 1
     }
     else {
         false
@@ -236,18 +232,13 @@ fn pile_can_be_placed(source_pile: Vec<(String, usize, usize, bool)>, target_pil
 fn is_different_color_suit(suit_a: usize, suit_b: usize) -> bool {
     if suit_a % 2 == 0 && suit_b % 2 == 0 { // both red
         false
-    } else if suit_a % 2 != 0 && suit_b % 2 != 0 { // both black
-        false
-    }
-    else {
-        true
-    }
+    } else { !(suit_a % 2 != 0 && suit_b % 2 != 0) }
 }
 
 fn get_flipped_pile(pile: Vec<(String, usize, usize, bool)>) -> Vec<(String, usize, usize, bool)> {
     let mut sub_pile: Vec<(String, usize, usize, bool)> = Vec::new();
     for card in pile {
-        if card.3 == true {
+        if card.3 {
             sub_pile.push(card);
         }
     }
@@ -260,7 +251,7 @@ fn draw_flipped_pile(pile: &mut Vec<(String, usize, usize, bool)>) -> Vec<(Strin
     while !finished {
         finished = match pile.last() {
             Some(card) => {
-                if card.3 == true {
+                if card.3 {
                     sub_pile.insert(0, draw_card_from_pile(pile));
                     false
                 } else {
@@ -339,7 +330,7 @@ fn display_board(deck: Vec<(String, usize, usize, bool)>,
 
 
     // top line
-    if deck.len() > 0 {
+    if !deck.is_empty() {
         card_name = FACE_DOWN_CARD_STRING.to_string();
     } else {
         card_name = DECK_EMPTY_STRING.to_string();
@@ -363,7 +354,7 @@ fn display_board(deck: Vec<(String, usize, usize, bool)>,
             match pile.get(row) {
                 Some(card) => {
                     card_name = card.0.to_string();
-                    if card.3 == true {
+                    if card.3 {
                         full_string = format!("{full_string}{card_name}");
                     } else {
                         full_string = format!("{full_string}{FACE_DOWN_CARD_STRING}");
@@ -408,7 +399,8 @@ fn suit_name_to_int(suit: &str) -> usize {
 
 fn card_value_to_int(value: &str) -> usize {
     let value = value.trim();
-    let x = match value.parse() {
+    
+    match value.parse() {
         Ok(num) => num,
         Err(_) => {
             if value == "A" {
@@ -424,8 +416,7 @@ fn card_value_to_int(value: &str) -> usize {
                 NULL_USIZE
             }
         }
-    };
-    x
+    }
 }
 
 fn shuffle_deck(deck: &mut Vec<(String, usize, usize, bool)>) {
@@ -433,6 +424,6 @@ fn shuffle_deck(deck: &mut Vec<(String, usize, usize, bool)>) {
 }
 
 fn create_deck() -> Vec<(String, usize, usize, bool)> {
-    let deck = iproduct!(CARD_SUITS.clone(), CARD_VALUES.clone()).map(|(suit, value)| (format!("{value}|{suit}"), suit_name_to_int(suit), card_value_to_int(value), false)).collect();
-    deck
+    
+    iproduct!(CARD_SUITS, CARD_VALUES).map(|(suit, value)| (format!("{value}|{suit}"), suit_name_to_int(suit), card_value_to_int(value), false)).collect()
 }
