@@ -9,7 +9,7 @@ const FACE_DOWN_CARD_STRING: &str = " \u{025AF}  ";
 const WASTE_SELECTED_USIZE: usize = 44;
 
 use rand::thread_rng;
-use rand::seq::SliceRandom;
+use rand::seq::{SliceRandom};
 use std::io;
 use itertools::iproduct;
 
@@ -123,7 +123,7 @@ fn on_waste_selection(tableau_selection: &mut usize) {
 }
 
 fn try_to_place_in_foundation_slot_from_selection(slot: usize, foundation: &mut Vec<Vec<(String, usize, usize, bool)>>, 
-                                                tableau: &mut Vec<Vec<(String, usize, usize, bool)>>, 
+                                                tableau: &mut [Vec<(String, usize, usize, bool)>], 
                                                 tableau_selection: &mut usize, 
                                                 waste: &mut Vec<(String, usize, usize, bool)>) {
     if *tableau_selection != NULL_USIZE {
@@ -199,9 +199,8 @@ fn on_tableau_selection(tableau: &mut Vec<Vec<(String, usize, usize, bool)>>,
 
 fn flip_top_card_in_pile(pile: &mut Vec<(String, usize, usize, bool)>) {
     if !pile.is_empty() {
-        match pile.last_mut() {
-            Some(card) => card.3 = true,
-            None => (),
+        if let Some(card) = pile.last_mut() {
+            card.3 = true
         }
     }
 }
@@ -388,12 +387,12 @@ fn get_top_of_pile_name(pile: Vec<(String, usize, usize, bool)>) -> String {
 
 fn suit_name_to_int(suit: &str) -> usize {
     let mut x = NULL_USIZE;
-    'suit_check: for index in 0..CARD_SUITS.len() {
+    
+    (0..CARD_SUITS.len()).for_each(|index| {
         if CARD_SUITS[index] == suit {
             x = index;
-            break 'suit_check;
         }
-    }
+    });
     x
 }
 
