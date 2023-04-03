@@ -23,7 +23,7 @@ fn start_solitaire()
     let mut tableau: Vec<Vec<(String, usize, usize, bool)>> = Vec::new();
     let mut foundation: Vec<Vec<(String, usize, usize, bool)>> = Vec::new();
     let mut deck = create_deck();
-    shuffle_deck(&mut deck);
+    deck = shuffle_deck(deck);
     set_up_tableau(&mut deck, &mut tableau);
     set_up_foundation(&mut foundation);
     play_solitaire(&mut deck, &mut waste, &mut tableau, &mut foundation)
@@ -418,8 +418,10 @@ fn card_value_to_int(value: &str) -> usize {
     }
 }
 
-fn shuffle_deck(deck: &mut Vec<(String, usize, usize, bool)>) {
+fn shuffle_deck(deck:Vec<(String, usize, usize, bool)>) -> Vec<(String, usize, usize, bool)> {
+    let mut deck = deck;
     deck.shuffle(&mut thread_rng());
+    deck
 }
 
 fn create_deck() -> Vec<(String, usize, usize, bool)> {
